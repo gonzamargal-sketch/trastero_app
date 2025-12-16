@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Trastero</title>
+</head>
+<body>
+    <h1>Inventario del Trastero</h1>
+    <a href="{{ url_for('objetos.agregar') }}">Agregar objeto</a>
+    <ul>
+    {% for obj in objetos %}
+        <li>{{ obj.nombre }} - {{ obj.categoria }} - {{ obj.ubicacion }} - Cantidad: {{ obj.cantidad }}</li>
+    {% else %}
+        <li>No hay objetos aún.</li>
+    {% endfor %}
+    </ul>
+</body>
+</html>
+
