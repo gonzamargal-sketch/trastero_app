@@ -1,0 +1,14 @@
+# Entorno virtual
+trastero/
+venv/
+.env
+
+# Python
+__pycache__/
+*.pyc
+
+# Base de datos
+*.db
+
+# Flask
+instance/

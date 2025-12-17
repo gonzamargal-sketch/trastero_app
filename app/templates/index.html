@@ -1,18 +1,60 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+    <meta charset="UTF-8">
     <title>Trastero</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
+<div class="container mt-5">
     <h1>Inventario del Trastero</h1>
-    <a href="{{ url_for('objetos.agregar') }}">Agregar objeto</a>
-    <ul>
-    {% for obj in objetos %}
-        <li>{{ obj.nombre }} - {{ obj.categoria }} - {{ obj.ubicacion }} - Cantidad: {{ obj.cantidad }}</li>
+
+    <a href="{{ url_for('objetos.agregar') }}" class="btn btn-primary mb-3">Agregar objeto</a>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} mt-3">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% if objetos %}
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Categoría</th>
+                <th>Ubicación</th>
+                <th>Cantidad</th>
+                <th>Notas</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for obj in objetos %}
+            <tr>
+                <td>{{ obj.id }}</td>
+                <td>{{ obj.nombre }}</td>
+                <td>{{ obj.categoria }}</td>
+                <td>{{ obj.ubicacion }}</td>
+                <td>{{ obj.cantidad }}</td>
+                <td>{{ obj.notas }}</td>
+                <td>
+                    <a href="{{ url_for('objetos.eliminar', objeto_id=obj.id) }}" class="btn btn-danger">Eliminar</a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
     {% else %}
-        <li>No hay objetos aún.</li>
-    {% endfor %}
-    </ul>
+        <p>No hay objetos aún.</p>
+    {% endif %}
+</div>
 </body>
 </html>
+
 

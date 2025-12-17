@@ -1,22 +1,59 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Agregar objeto</title>
+    <meta charset="UTF-8">
+    <title>Agregar Objeto</title>
+    <!-- Bootstrap CDN opcional para estilos rápidos -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    <h1>Agregar nuevo objeto al trastero</h1>
-    <form method="POST">
-        <label>Nombre:</label><br>
-        <input type="text" name="nombre"><br>
-        <label>Categoría:</label><br>
-        <input type="text" name="categoria"><br>
-        <label>Ubicación:</label><br>
-        <input type="text" name="ubicacion"><br>
-        <label>Cantidad:</label><br>
-        <input type="number" name="cantidad" value="1"><br>
-        <label>Notas:</label><br>
-        <textarea name="notas"></textarea><br>
-        <input type="submit" value="Agregar">
+<div class="container mt-5">
+    <h1>Agregar nuevo objeto</h1>
+
+    <!-- Mensajes de flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} mt-3">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form action="{{ url_for('objetos.agregar') }}" method="post" class="mt-4">
+        <div class="mb-3">
+            <label for="nombre" class="form-label">Nombre *</label>
+            <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Nombre del objeto" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="categoria" class="form-label">Categoría</label>
+            <input type="text" class="form-control" id="categoria" name="categoria" placeholder="Categoría del objeto">
+        </div>
+
+        <div class="mb-3">
+            <label for="ubicacion" class="form-label">Ubicación</label>
+            <input type="text" class="form-control" id="ubicacion" name="ubicacion" placeholder="Ubicación dentro del trastero">
+        </div>
+
+        <div class="mb-3">
+            <label for="cantidad" class="form-label">Cantidad</label>
+            <input type="number" class="form-control" id="cantidad" name="cantidad" value="1" min="1">
+        </div>
+
+        <div class="mb-3">
+            <label for="notas" class="form-label">Notas</label>
+            <textarea class="form-control" id="notas" name="notas" rows="3" placeholder="Notas adicionales"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Agregar objeto</button>
+        <a href="{{ url_for('objetos.inicio') }}" class="btn btn-secondary">Volver al listado</a>
     </form>
+</div>
+
+<!-- Bootstrap JS opcional -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
