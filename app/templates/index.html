@@ -71,8 +71,11 @@
                 <td class="align-middle">{{ obj.ubicacion or '-' }}</td>
                 <td class="align-middle">{{ obj.notas or '-' }}</td>
                 <td class="align-middle">
-                    <a href="{{ url_for('objetos.editar', objeto_id=obj.id) }}" class="btn btn-warning btn-sm mb-1">Editar</a>
-                    <a href="{{ url_for('objetos.eliminar', objeto_id=obj.id) }}" class="btn btn-danger btn-sm mb-1">Eliminar</a>
+                    <a href="{{ url_for('objetos.editar', objeto_id=obj.id) }}" class="btn btn-warning btn-block mb-1">Editar</a>
+                    <form action="{{ url_for('objetos.eliminar', objeto_id=obj.id) }}" method="post" onsubmit="return confirmarEliminacion();">
+                        <input type="hidden" name="_method" value="DELETE" />
+                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                    </form>
                 </td>   
             </tr>
         {% endfor %}
@@ -102,7 +105,9 @@ function confirmarSuma(form) {
 function confirmarResta(form) {
     mostrarConfirmacion(form, `¿Confirmar que quieres restar ${form.valor.value} unidad(es)?`);
 }
-
+function confirmarEliminacion() {
+    return confirm("¿Seguro que quieres eliminar este objeto completamente?");
+}
 // Auto-cerrar los flash después de 3 segundos
 window.addEventListener('DOMContentLoaded', () => {
     const alerts = document.querySelectorAll('.alert');

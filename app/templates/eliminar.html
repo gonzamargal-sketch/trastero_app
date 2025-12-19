@@ -22,15 +22,7 @@
 
     <form method="post" action="{{ url_for('objetos.eliminar', objeto_id=objeto.id) }}">
         <input type="hidden" name="_method" value="DELETE" />
-
-        {% if objeto.cantidad > 1 %}
-            <p>Este objeto tiene {{ objeto.cantidad }} unidades. ¿Cuántas quieres eliminar?</p>
-            <input type="number" name="cantidad" value="1" min="1" max="{{ objeto.cantidad }}" class="form-control mb-3">
-        {% else %}
-            <input type="hidden" name="cantidad" value="1">
-            <p>¿Seguro que quieres eliminar este objeto?</p>
-        {% endif %}
-
+        <p>¿Seguro que quieres eliminar completamente el objeto "{{ objeto.nombre }}"?</p>
         <button type="submit" class="btn btn-danger">Eliminar</button>
         <a href="{{ url_for('objetos.inicio') }}" class="btn btn-secondary">Cancelar</a>
     </form>
