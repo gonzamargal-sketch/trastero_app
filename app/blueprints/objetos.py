@@ -79,3 +79,64 @@ def eliminar(objeto_id):
         return redirect(url_for('objetos.inicio'))
 
     return render_template('eliminar.html', objeto=objeto)
+
+# Editar objeto
+@objetos_bp.route('/<int:objeto_id>/editar', methods=['GET', 'POST'])
+def editar(objeto_id):
+    objeto = Objeto.query.get_or_404(objeto_id)
+
+    if request.method == 'POST':
+        nombre = request.form.get('nombre', '').strip()
+        if not nombre:
+            flash("El nombre es obligatorio", "danger")
+            return redirect(url_for('objetos.editar', objeto_id=objeto.id))
+
+        objeto.nombre = nombre
+        objeto.categoria = request.form.get('categoria', '').strip()
+        objeto.ubicacion = request.form.get('ubicacion', '').strip()
+        objeto.notas = request.form.get('notas', '').strip()
+
+        try:
+            db.session.commit()
+            flash(f"Objeto '{objeto.nombre}' actualizado", "success")
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Error al editar: {e}", "danger")
+
+        return redirect(url_for('objetos.inicio'))
+
+    return render_template('editar.html', objeto=objeto)
+
+@objetos_bp.route("/<int:objeto_id>/cantidad", methods=["POST"])
+def modificar_cantidad(objeto_id):
+    objeto = Objeto.query.get_or_404(objeto_id)
+
+    try:
+        valor = int(request.form.get("valor", 1))
+        if valor < 1:
+            flash("El valor debe ser mayor que 0", "danger")
+            return redirect(url_for("objetos.inicio"))
+
+        accion = request.form.get("accion")
+        if accion == "sumar":
+            objeto.cantidad += valor
+            flash(f"Se añadieron {valor} a '{objeto.nombre}'", "success")
+        elif accion == "restar":
+            if objeto.cantidad - valor < 0:
+                objeto.cantidad = 0
+            else:
+                objeto.cantidad -= valor
+            flash(f"Se restaron {valor} de '{objeto.nombre}'", "success")
+        else:
+            return "Acción no válida", 400
+
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error al modificar cantidad: {e}", "danger")
+
+    return redirect(url_for("objetos.inicio"))
+
+
+
+

@@ -12,24 +12,24 @@
     <a href="{{ url_for('objetos.agregar') }}" class="btn btn-primary mb-3">Agregar objeto</a>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
+    {% if messages %}
         {% for category, message in messages %}
-          <div class="alert alert-{{ category }} mt-3">
-            {{ message }}
-          </div>
+            <div class="alert alert-{{ category }} mt-3 alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
         {% endfor %}
-      {% endif %}
+    {% endif %}
     {% endwith %}
 
     {% if objetos %}
-    <table class="table table-bordered">
+    <table class="table table-bordered text-center">
         <thead>
             <tr>
-                <th>ID</th>
                 <th>Nombre</th>
+                <th>Cantidad</th>
                 <th>Categoría</th>
                 <th>Ubicación</th>
-                <th>Cantidad</th>
                 <th>Notas</th>
                 <th>Acciones</th>
             </tr>
@@ -37,23 +37,83 @@
         <tbody>
         {% for obj in objetos %}
             <tr>
-                <td>{{ obj.id }}</td>
-                <td>{{ obj.nombre }}</td>
-                <td>{{ obj.categoria }}</td>
-                <td>{{ obj.ubicacion }}</td>
-                <td>{{ obj.cantidad }}</td>
-                <td>{{ obj.notas }}</td>
-                <td>
-                    <a href="{{ url_for('objetos.eliminar', objeto_id=obj.id) }}" class="btn btn-danger">Eliminar</a>
+                <td class="align-middle">{{ obj.nombre }}</td>
+                <td class="align-middle" style="white-space: nowrap;">
+
+                    <div class="cantidad-panel text-center p-2 border rounded" style="display:inline-block; min-width:120px;">
+                        <div class="cantidad-valor fw-bold mb-2">{{ obj.cantidad }}</div>
+
+                        <!-- Añadir unidades -->
+                        <form method="post"
+                            action="{{ url_for('objetos.modificar_cantidad', objeto_id=obj.id) }}"
+                            onsubmit="return confirmarSuma(this);"
+                            style="display:flex; align-items:center; gap:4px; justify-content:center; margin-bottom:4px;">
+                            <input type="number" name="valor" value="1" min="1" style="width:50px; text-align:center;">
+                            <input type="hidden" name="accion" value="sumar">
+                            <button type="button" class="btn btn-success btn-sm" onclick="confirmarSuma(this.form)">+</button>
+                        </form>
+
+                        <hr style="margin:4px 0; border-top:1px solid #ccc;">
+
+                        <!-- Restar unidades -->
+                        <form method="post"
+                            action="{{ url_for('objetos.modificar_cantidad', objeto_id=obj.id) }}"
+                            onsubmit="return confirmarResta(this);"
+                            style="display:flex; align-items:center; gap:4px; justify-content:center;">
+                            <input type="number" name="valor" value="1" min="1" style="width:50px; text-align:center;">
+                            <input type="hidden" name="accion" value="restar">
+                            <button type="button" class="btn btn-danger btn-sm" onclick="confirmarResta(this.form)">−</button>
+                        </form>
+                    </div>
+
                 </td>
+                <td class="align-middle">{{ obj.categoria or '-' }}</td>
+                <td class="align-middle">{{ obj.ubicacion or '-' }}</td>
+                <td class="align-middle">{{ obj.notas or '-' }}</td>
+                <td class="align-middle">
+                    <a href="{{ url_for('objetos.editar', objeto_id=obj.id) }}" class="btn btn-warning btn-sm mb-1">Editar</a>
+                    <a href="{{ url_for('objetos.eliminar', objeto_id=obj.id) }}" class="btn btn-danger btn-sm mb-1">Eliminar</a>
+                </td>   
             </tr>
         {% endfor %}
         </tbody>
     </table>
     {% else %}
-        <p>No hay objetos aún.</p>
+        <p class="text-center">No hay objetos aún.</p>
     {% endif %}
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+let formToSubmit = null;
+
+function mostrarConfirmacion(form, mensaje) {
+    formToSubmit = form;
+    if (confirm(mensaje)) {
+        formToSubmit.submit();
+    }
+}
+
+function confirmarSuma(form) {
+    mostrarConfirmacion(form, `¿Confirmar que quieres añadir ${form.valor.value} unidad(es)?`);
+}
+
+function confirmarResta(form) {
+    mostrarConfirmacion(form, `¿Confirmar que quieres restar ${form.valor.value} unidad(es)?`);
+}
+
+// Auto-cerrar los flash después de 3 segundos
+window.addEventListener('DOMContentLoaded', () => {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+            bsAlert.close();
+        }, 3000);
+    });
+});
+</script>
 </body>
 </html>
 
