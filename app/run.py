@@ -3,6 +3,7 @@ from flask import redirect, url_for
 
 app = create_app()
 
+
 @app.route("/")
 def index():
     return redirect(url_for("objetos.inicio"))

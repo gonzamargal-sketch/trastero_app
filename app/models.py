@@ -9,7 +9,7 @@ class Objeto(db.Model):
     categoria = db.Column(db.String(50))
     ubicacion = db.Column(db.String(100))
     cantidad = db.Column(db.Integer, default=1)
-    notas = db.Column(db.Text)
+    foto = db.Column(db.String(200))
 
     def __repr__(self):
         return f"<Objeto {self.nombre}>"
@@ -21,5 +21,5 @@ class Objeto(db.Model):
             "cantidad": self.cantidad,
             "categoria": self.categoria,
             "ubicacion": self.ubicacion,
-            "notas": self.notas
+            "foto": self.foto
         }

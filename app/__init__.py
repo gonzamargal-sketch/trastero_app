@@ -24,6 +24,8 @@ def create_app():
     # Registrar blueprints
     from .blueprints.objetos import objetos_bp
     app.register_blueprint(objetos_bp, url_prefix="/objetos")
+    from .blueprints.api import api_bp
+    app.register_blueprint(api_bp)
 
     return app
 

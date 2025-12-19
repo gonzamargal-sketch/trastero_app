@@ -1,6 +1,8 @@
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from app.models import Objeto, db
+from werkzeug.utils import secure_filename
+import os
 
 objetos_bp = Blueprint(
     'objetos',
@@ -8,6 +10,11 @@ objetos_bp = Blueprint(
     url_prefix='/objetos'
 )
 
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+UPLOAD_FOLDER = "static/uploads"
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # Listar objetos
 @objetos_bp.route('/')
@@ -16,27 +23,35 @@ def inicio():
     return render_template('index.html', objetos=objetos)
 
 # Agregar objeto
-@objetos_bp.route('/agregar', methods=['GET', 'POST'])
+@objetos_bp.route("/agregar", methods=["GET", "POST"])
 def agregar():
-    if request.method == 'POST':
-        nombre = request.form.get('nombre', '').strip()
-        if not nombre:
-            # Si no hay nombre, mostramos un mensaje y no guardamos
-            flash("El nombre es obligatorio", "error")
-            return redirect(url_for('objetos.agregar'))
+    if request.method == "POST":
+        nombre = request.form.get("nombre")
+        categoria = request.form.get("categoria")
+        ubicacion = request.form.get("ubicacion")
+        cantidad = int(request.form.get("cantidad", 1))
 
-        obj = Objeto(
+        archivo = request.files.get("foto")
+        ruta_foto = None
+        if archivo and allowed_file(archivo.filename):
+            filename = secure_filename(archivo.filename)
+            upload_path = os.path.join(current_app.root_path, "static/uploads", filename)
+            archivo.save(upload_path)
+            ruta_foto = f"uploads/{filename}"
+
+        nuevo_objeto = Objeto(
             nombre=nombre,
-            categoria=request.form.get('categoria', '').strip(),
-            ubicacion=request.form.get('ubicacion', '').strip(),
-            cantidad=int(request.form.get('cantidad', 1)),
-            notas=request.form.get('notas', '').strip()
+            categoria=categoria,
+            ubicacion=ubicacion,
+            cantidad=cantidad,
+            foto=ruta_foto
         )
-        db.session.add(obj)
+        db.session.add(nuevo_objeto)
         db.session.commit()
-        return redirect(url_for('objetos.inicio'))
+        flash("Objeto agregado correctamente", "success")
+        return redirect(url_for("objetos.inicio"))
 
-    return render_template('agregar.html')
+    return render_template("agregar.html")
 
 # Eliminar objeto
 @objetos_bp.route("/<int:objeto_id>/eliminar", methods=["POST"])
@@ -52,31 +67,36 @@ def eliminar(objeto_id):
     return redirect(url_for("objetos.inicio"))
 
 # Editar objeto
-@objetos_bp.route('/<int:objeto_id>/editar', methods=['GET', 'POST'])
+@objetos_bp.route("/<int:objeto_id>/editar", methods=["GET", "POST"])
 def editar(objeto_id):
     objeto = Objeto.query.get_or_404(objeto_id)
 
-    if request.method == 'POST':
-        nombre = request.form.get('nombre', '').strip()
-        if not nombre:
-            flash("El nombre es obligatorio", "danger")
-            return redirect(url_for('objetos.editar', objeto_id=objeto.id))
-
-        objeto.nombre = nombre
-        objeto.categoria = request.form.get('categoria', '').strip()
-        objeto.ubicacion = request.form.get('ubicacion', '').strip()
-        objeto.notas = request.form.get('notas', '').strip()
-
+    if request.method == "POST":
         try:
+            objeto.nombre = request.form["nombre"]
+            objeto.categoria = request.form.get("categoria")
+            objeto.ubicacion = request.form.get("ubicacion")
+
+            # Manejo de foto
+            if "foto" in request.files:
+                file = request.files["foto"]
+                if file and allowed_file(file.filename):
+                    filename = secure_filename(file.filename)
+                    upload_path = os.path.join(current_app.root_path, UPLOAD_FOLDER)
+                    os.makedirs(upload_path, exist_ok=True)
+                    file.save(os.path.join(upload_path, filename))
+                    objeto.foto = filename
+
             db.session.commit()
-            flash(f"Objeto '{objeto.nombre}' actualizado", "success")
+            flash(f"Objeto '{objeto.nombre}' editado correctamente.", "success")
+            return redirect(url_for("objetos.inicio"))
+
         except Exception as e:
             db.session.rollback()
-            flash(f"Error al editar: {e}", "danger")
+            flash(f"Error al editar objeto: {e}", "danger")
+            return redirect(url_for("objetos.editar", objeto_id=objeto_id))
 
-        return redirect(url_for('objetos.inicio'))
-
-    return render_template('editar.html', objeto=objeto)
+    return render_template("editar.html", objeto=objeto)
 
 @objetos_bp.route("/<int:objeto_id>/cantidad", methods=["POST"])
 def modificar_cantidad(objeto_id):
@@ -108,63 +128,6 @@ def modificar_cantidad(objeto_id):
 
     return redirect(url_for("objetos.inicio"))
 
-
-# =====================
-# RUTAS API
-# =====================
-
-@objetos_bp.route("/api", methods=["GET"])
-def api_listar_objetos():
-    objetos = Objeto.query.all()
-    return jsonify([obj.to_dict() for obj in objetos])
-
-@objetos_bp.route("/api", methods=["POST"])
-def api_agregar_objeto():
-    data = request.json
-    if not data.get("nombre"):
-        return jsonify({"error": "Nombre obligatorio"}), 400
-    obj = Objeto(
-        nombre=data["nombre"],
-        cantidad=data.get("cantidad", 1),
-        categoria=data.get("categoria"),
-        ubicacion=data.get("ubicacion"),
-        notas=data.get("notas")
-    )
-    db.session.add(obj)
-    db.session.commit()
-    return jsonify(obj.to_dict()), 201
-
-@objetos_bp.route("/api/<int:objeto_id>", methods=["PUT"])
-def api_editar_objeto(objeto_id):
-    obj = Objeto.query.get_or_404(objeto_id)
-    data = request.json
-    obj.nombre = data.get("nombre", obj.nombre)
-    obj.categoria = data.get("categoria", obj.categoria)
-    obj.ubicacion = data.get("ubicacion", obj.ubicacion)
-    obj.notas = data.get("notas", obj.notas)
-    db.session.commit()
-    return jsonify(obj.to_dict())
-
-@objetos_bp.route("/api/<int:objeto_id>/cantidad", methods=["PATCH"])
-def api_modificar_cantidad(objeto_id):
-    obj = Objeto.query.get_or_404(objeto_id)
-    data = request.json
-    valor = data.get("valor", 1)
-    accion = data.get("accion")
-    if accion == "sumar":
-        obj.cantidad += valor
-    elif accion == "restar":
-        obj.cantidad = max(obj.cantidad - valor, 0)
-    else:
-        return jsonify({"error": "Acción no válida"}), 400
-    db.session.commit()
-    return jsonify(obj.to_dict())
-
-@objetos_bp.route("/api/<int:objeto_id>", methods=["DELETE"])
-def api_eliminar_objeto(objeto_id):
-    obj = Objeto.query.get_or_404(objeto_id)
-    db.session.delete(obj)
-    db.session.commit()
     return jsonify({"mensaje": f"Objeto {obj.nombre} eliminado"})
 
 

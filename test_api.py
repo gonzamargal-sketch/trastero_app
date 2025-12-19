@@ -1,66 +1,95 @@
 import requests
 
-# URL base de la API de objetos
 BASE_URL = "http://127.0.0.1:5000/objetos/api"
 
+
+# ========= FUNCIONES =========
+
 def listar_objetos():
+    print("📋 Listando objetos...")
     r = requests.get(BASE_URL)
     if r.ok:
-        print("Lista de objetos:")
         for obj in r.json():
-            print(f"{obj['id']}: {obj['nombre']} - Cantidad: {obj['cantidad']}")
+            print(obj)
     else:
-        print("Error al listar objetos:", r.status_code, r.text)
+        print("❌ Error:", r.status_code, r.text)
+
 
 def crear_objeto():
+    print("➕ Creando objeto...")
     data = {
-        "nombre": "Caja de herramientas",
-        "categoria": "Herramientas",
-        "ubicacion": "Estantería A",
-        "cantidad": 3,
-        "notas": "Caja pesada"
+        "nombre": "Caja de pruebas",
+        "categoria": "Test",
+        "ubicacion": "Estantería Z",
+        "cantidad": 2
     }
+
     r = requests.post(BASE_URL, json=data)
     if r.ok:
-        print("Objeto creado:", r.json())
-        return r.json()["id"]
+        obj = r.json()
+        print("✅ Objeto creado:", obj)
+        return obj["id"]
     else:
-        print("Error al crear objeto:", r.status_code, r.text)
-        return None
+        print("❌ Error:", r.status_code, r.text)
+
+
+def obtener_objeto(objeto_id):
+    print(f"🔍 Obteniendo objeto {objeto_id}...")
+    r = requests.get(f"{BASE_URL}/{objeto_id}")
+    if r.ok:
+        print("✅ Objeto:", r.json())
+    else:
+        print("❌ Error:", r.status_code, r.text)
+
 
 def modificar_cantidad(objeto_id, accion, valor):
-    data = {"accion": accion, "valor": valor}
-    r = requests.patch(f"http://127.0.0.1:5000/objetos/api/{objeto_id}/cantidad", json=data)
+    print(f"✏️ {accion.upper()} {valor} unidades...")
+    data = {
+        "accion": accion,
+        "valor": valor
+    }
+
+    r = requests.patch(f"{BASE_URL}/{objeto_id}/cantidad", json=data)
     if r.ok:
-        print(f"Cantidad modificada ({accion} {valor}):", r.json())
+        print("✅ Resultado:", r.json())
     else:
-        print("Error al modificar cantidad:", r.status_code, r.text)
+        print("❌ Error:", r.status_code, r.text)
+
 
 def eliminar_objeto(objeto_id):
-    r = requests.delete(f"http://127.0.0.1:5000/objetos/api/{objeto_id}")
+    print(f"🗑 Eliminando objeto {objeto_id}...")
+    r = requests.delete(f"{BASE_URL}/{objeto_id}")
     if r.ok:
-        print("Objeto eliminado:", r.json())
+        print("✅ Eliminado:", r.json())
     else:
-        print("Error al eliminar objeto:", r.status_code, r.text)
+        print("❌ Error:", r.status_code, r.text)
+
+
+# ========= EJECUCIÓN CONTROLADA =========
 
 if __name__ == "__main__":
-    # 1. Listar objetos existentes
-    listar_objetos()
 
-    # 2. Crear un objeto nuevo
-    objeto_id = crear_objeto()
-    if objeto_id is None:
-        exit()
+    # 1️⃣ Listar objetos
+    #listar_objetos()
 
-    # 3. Sumar 2 unidades al objeto
-    modificar_cantidad(objeto_id, "sumar", 2)
+    # 2️⃣ Crear objeto
+    #objeto_id = crear_objeto()
 
-    # 4. Restar 1 unidad al objeto
-    modificar_cantidad(objeto_id, "restar", 1)
+    # ⚠️ COPIA EL ID QUE IMPRIME Y PÉGALO AQUÍ
+    objeto_id = 3
 
-    # 5. Eliminar el objeto
+    # 3️⃣ Obtener objeto
+    #obtener_objeto(objeto_id)
+
+    # 4️⃣ Sumar cantidad
+    #modificar_cantidad(objeto_id, "sumar", 3)
+
+    # 5️⃣ Restar cantidad
+    #modificar_cantidad(objeto_id, "restar", 1)
+
+    # 6️⃣ Eliminar objeto
     eliminar_objeto(objeto_id)
 
-    # 6. Listar objetos finales
-    listar_objetos()
+    # 7️⃣ Listar objetos finales
+    # listar_objetos()
 
