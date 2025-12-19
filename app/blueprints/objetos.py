@@ -1,5 +1,5 @@
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from app.models import Objeto, db
 
 objetos_bp = Blueprint(
@@ -137,6 +137,64 @@ def modificar_cantidad(objeto_id):
 
     return redirect(url_for("objetos.inicio"))
 
+
+# =====================
+# RUTAS API
+# =====================
+
+@objetos_bp.route("/api", methods=["GET"])
+def api_listar_objetos():
+    objetos = Objeto.query.all()
+    return jsonify([obj.to_dict() for obj in objetos])
+
+@objetos_bp.route("/api", methods=["POST"])
+def api_agregar_objeto():
+    data = request.json
+    if not data.get("nombre"):
+        return jsonify({"error": "Nombre obligatorio"}), 400
+    obj = Objeto(
+        nombre=data["nombre"],
+        cantidad=data.get("cantidad", 1),
+        categoria=data.get("categoria"),
+        ubicacion=data.get("ubicacion"),
+        notas=data.get("notas")
+    )
+    db.session.add(obj)
+    db.session.commit()
+    return jsonify(obj.to_dict()), 201
+
+@objetos_bp.route("/api/<int:objeto_id>", methods=["PUT"])
+def api_editar_objeto(objeto_id):
+    obj = Objeto.query.get_or_404(objeto_id)
+    data = request.json
+    obj.nombre = data.get("nombre", obj.nombre)
+    obj.categoria = data.get("categoria", obj.categoria)
+    obj.ubicacion = data.get("ubicacion", obj.ubicacion)
+    obj.notas = data.get("notas", obj.notas)
+    db.session.commit()
+    return jsonify(obj.to_dict())
+
+@objetos_bp.route("/api/<int:objeto_id>/cantidad", methods=["PATCH"])
+def api_modificar_cantidad(objeto_id):
+    obj = Objeto.query.get_or_404(objeto_id)
+    data = request.json
+    valor = data.get("valor", 1)
+    accion = data.get("accion")
+    if accion == "sumar":
+        obj.cantidad += valor
+    elif accion == "restar":
+        obj.cantidad = max(obj.cantidad - valor, 0)
+    else:
+        return jsonify({"error": "Acción no válida"}), 400
+    db.session.commit()
+    return jsonify(obj.to_dict())
+
+@objetos_bp.route("/api/<int:objeto_id>", methods=["DELETE"])
+def api_eliminar_objeto(objeto_id):
+    obj = Objeto.query.get_or_404(objeto_id)
+    db.session.delete(obj)
+    db.session.commit()
+    return jsonify({"mensaje": f"Objeto {obj.nombre} eliminado"})
 
 
 

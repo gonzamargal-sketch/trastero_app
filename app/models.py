@@ -1,7 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
+from app import db
 
-# Creamos la instancia de SQLAlchemy
-db = SQLAlchemy()
 
 # Modelo Objeto
 class Objeto(db.Model):
@@ -14,3 +13,13 @@ class Objeto(db.Model):
 
     def __repr__(self):
         return f"<Objeto {self.nombre}>"
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "cantidad": self.cantidad,
+            "categoria": self.categoria,
+            "ubicacion": self.ubicacion,
+            "notas": self.notas
+        }
